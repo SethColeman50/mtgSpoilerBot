@@ -1,1 +1,4 @@
 .venv
+*.db
+*.egg-info
+__pycache__
