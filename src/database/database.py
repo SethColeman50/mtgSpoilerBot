@@ -2,7 +2,8 @@ import sqlite3
 from webScrap.card import Card
 
 # I want a database singleton that combines all the things I've created so far to reduce repeated code
-TABLE_NAME = "cards"
+CARD_TABLE_NAME = "cards"
+CHANNEL_TABLE_NAME = "channels"
 
 class Database():
     def __new__(cls):
@@ -13,16 +14,17 @@ class Database():
     def __init__(self):
         self.connection = sqlite3.connect("previous_cards.db")
         self.cursor = self.connection.cursor()
-        self.create_table()
-        self.current_id = self.cursor.execute(f"SELECT MAX(rowid) FROM {TABLE_NAME}").fetchone()[0]
+        self.create_tables()
+        self.current_id = self.cursor.execute(f"SELECT MAX(rowid) FROM {CARD_TABLE_NAME}").fetchone()[0]
 
-    def create_table(self):
-        if self.cursor.execute(f"SELECT name FROM sqlite_master WHERE name='{TABLE_NAME}'").fetchone() is None:
-            self.cursor.execute(f"CREATE TABLE {TABLE_NAME}(name, image_link, oracle_text)")
+    def create_tables(self):
+        self.cursor.execute(f"CREATE TABLE IF NOT EXISTS {CARD_TABLE_NAME} (name, image_link, oracle_text)")
+
+        self.cursor.execute(f"CREATE TABLE IF NOT EXISTS {CHANNEL_TABLE_NAME} (guild_id, channel_id, PRIMARY KEY (guild_id))")
 
     def insert_card(self, card: Card):
         self.cursor.execute(f"""
-            INSERT INTO {TABLE_NAME} VALUES
+            INSERT INTO {CARD_TABLE_NAME} VALUES
                 ('{card.name}', '{card.image_link}', '{card.oracle_text}')
         """)
 
@@ -40,5 +42,19 @@ class Database():
             return None
         
         return Card(*self.cursor.execute(f"""
-            SELECT * FROM {TABLE_NAME} WHERE rowid={self.current_id}
+            SELECT * FROM {CARD_TABLE_NAME} WHERE rowid={self.current_id}
         """).fetchone())
+    
+    def insert_channel(self, guild_id: int, channel_id: int):
+        self.cursor.execute(f'''
+            INSERT INTO {CHANNEL_TABLE_NAME} VALUES
+                ({guild_id}, {channel_id})
+        ''')
+
+        self.connection.commit()
+    
+    def get_all_channels(self):
+        guilds_and_channels = self.cursor.execute(f'''
+            SELECT channel_id FROM {CHANNEL_TABLE_NAME}
+        ''').fetchall()
+        return [guild_and_channel[0] for guild_and_channel in guilds_and_channels]

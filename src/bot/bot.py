@@ -24,20 +24,38 @@ def start_bot():
 
     @tasks.loop(minutes=20)
     async def send_new_cards():
+        new_cards = []
         try:
             new_cards = get_new_cards()
+            if new_cards == []:
+                print("No new cards to post")
         except Exception:
             await client.get_user(MY_USER_ID).send(f"An exception happened :(\n```\n{traceback.format_exc()}\n```")
+            print(traceback.format_exc())
 
         for card in new_cards:
-            message = card.oracle_text if '\n' in card.oracle_text else ""
+            message = card.oracle_text if '\n' in card.oracle_text or "SRC" not in card.oracle_text else ""
             image = discord.Embed(type="image", description=card.name).set_image(url=card.image_link)
 
-            await client.get_channel(CHANNEL_ID).send(message, embed=image, silent=True)
-            print(f"sent message for {card.name}")
+            for channel_id in Database().get_all_channels():
+                await client.get_channel(channel_id).send(message, embed=image, silent=True)
+                print(f"sent message for {card.name}")
+
+    @client.event
+    async def on_message(message):
+        if message.author == client.user or client.user not in message.mentions or message.author.id != MY_USER_ID:
+            return
+        
+        guild_id = message.guild.id
+        channel_id = message.channel_mentions[0].id
+        Database().insert_channel(guild_id, channel_id)
+
+        await message.channel.send(f"Set channel as <#{channel_id}>")
     
     load_dotenv()
     client.run(os.getenv("TOKEN"))
+
+
 
 def get_new_cards():
     db = Database()

@@ -16,7 +16,7 @@ def scrap(latest_card: Card):
     cards = soup.find_all("article")[:20] # I'll hopefully never be more than 20 behind
     output = []
     for card in cards:
-        # time.sleep(1)
+        time.sleep(1)
 
         name = card.find("h4").find("a").text
         if latest_card != None and name == latest_card.name:
