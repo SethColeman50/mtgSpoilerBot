@@ -1,0 +1,20 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src", "src/bot", "src/database", "src/webScrap"]
+
+[project]
+name = "mtgSpoilerBot"
+version = "2025.1.0"
+dependencies = [
+    "beautifulsoup4",
+    "requests",
+    "discord.py",
+    "python-dotenv",
+]
+authors = [
+    {name = "Seth Coleman", email = "sethcoleman2003@gmail.com"},
+]
+description = "A Private Discord bot that posts magic the gathering spoilers"

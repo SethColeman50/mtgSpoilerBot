@@ -47,7 +47,7 @@ class Database():
     
     def insert_channel(self, guild_id: int, channel_id: int):
         self.cursor.execute(f'''
-            INSERT INTO {CHANNEL_TABLE_NAME} VALUES
+            REPLACE INTO {CHANNEL_TABLE_NAME} VALUES
                 ({guild_id}, {channel_id})
         ''')
 

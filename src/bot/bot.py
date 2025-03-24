@@ -7,7 +7,6 @@ from webScrap.card import Card
 from discord.ext import tasks
 import traceback
 
-CHANNEL_ID = 1353775520826916917
 MY_USER_ID = 453325432658460685
 
 def start_bot():
@@ -31,7 +30,7 @@ def start_bot():
                 print("No new cards to post")
         except Exception:
             await client.get_user(MY_USER_ID).send(f"An exception happened :(\n```\n{traceback.format_exc()}\n```")
-            print(traceback.format_exc())
+            print(traceback.format_exc(), flush=True)
 
         for card in new_cards:
             message = card.oracle_text if '\n' in card.oracle_text or "SRC" not in card.oracle_text else ""
@@ -39,7 +38,7 @@ def start_bot():
 
             for channel_id in Database().get_all_channels():
                 await client.get_channel(channel_id).send(message, embed=image, silent=True)
-                print(f"sent message for {card.name}")
+                print(f"sent message for {card.name}", flush=True)
 
     @client.event
     async def on_message(message):
@@ -51,6 +50,7 @@ def start_bot():
         Database().insert_channel(guild_id, channel_id)
 
         await message.channel.send(f"Set channel as <#{channel_id}>")
+        print(f"Set channel in {message.guild.name} to {message.channel_mentions[0]}", flush=True)
     
     load_dotenv()
     client.run(os.getenv("TOKEN"))
