@@ -2,7 +2,7 @@ import discord
 from dotenv import load_dotenv
 import os
 from database.database import Database
-from webScrap.scrapping import scrap
+from webScrap.scrapping import scrap_for_cards
 from webScrap.card import Card
 from discord.ext import tasks
 import traceback
@@ -59,7 +59,7 @@ def start_bot():
 
 def get_new_cards():
     db = Database()
-    new_cards = scrap(latest_card=db.get_latest_card())
+    new_cards = scrap_for_cards(latest_card=db.get_latest_card())
     db.insert_many_cards(new_cards)
     return new_cards
 
