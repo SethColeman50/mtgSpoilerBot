@@ -1,9 +1,11 @@
 import sqlite3
 from webScrap.card import Card
+from webScrap.set import Set
 
 # I want a database singleton that combines all the things I've created so far to reduce repeated code
 CARD_TABLE_NAME = "cards"
 CHANNEL_TABLE_NAME = "channels"
+SETS_TABLE_NAME = "sets"
 
 class Database():
     def __new__(cls):
@@ -18,9 +20,29 @@ class Database():
         self.current_id = self.cursor.execute(f"SELECT MAX(rowid) FROM {CARD_TABLE_NAME}").fetchone()[0]
 
     def create_tables(self):
-        self.cursor.execute(f"CREATE TABLE IF NOT EXISTS {CARD_TABLE_NAME} (name, image_link, oracle_text)")
+        self.cursor.execute(f'''
+            CREATE TABLE IF NOT EXISTS {CHANNEL_TABLE_NAME} (
+                guild_id    NUMBER,
+                channel_id  NUMBER,
+                PRIMARY KEY (guild_id)
+            )
+        ''')
 
-        self.cursor.execute(f"CREATE TABLE IF NOT EXISTS {CHANNEL_TABLE_NAME} (guild_id, channel_id, PRIMARY KEY (guild_id))")
+        self.cursor.execute(f"""CREATE TABLE IF NOT EXISTS {SETS_TABLE_NAME} (
+            name        TEXT,
+            link            TEXT,
+            release_date    TEXT
+        )""")
+
+        self.cursor.execute(f'''
+            CREATE TABLE IF NOT EXISTS {CARD_TABLE_NAME} (
+                name        TEXT, 
+                image_link  TEXT, 
+                oracle_text TEXT,
+                set_name    TEXT,
+                FOREIGN KEY(set_name) REFERENCES {SETS_TABLE_NAME}(name)
+            )
+        ''')
 
     def insert_card(self, card: Card):
         self.cursor.execute(f"""
@@ -58,3 +80,15 @@ class Database():
             SELECT channel_id FROM {CHANNEL_TABLE_NAME}
         ''').fetchall()
         return [guild_and_channel[0] for guild_and_channel in guilds_and_channels]
+    
+    def insert_set(self, set: Set):
+        print(f'''
+            INSERT INTO {SETS_TABLE_NAME} VALUES
+                ('{set.name}', '{set.link}', '{set.release_date}')
+        ''')
+        self.cursor.execute(f'''
+            INSERT INTO {SETS_TABLE_NAME} VALUES
+                ("{set.name}", '{set.link}', '{set.release_date}')
+        ''')
+        
+        self.connection.commit()
