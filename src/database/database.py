@@ -48,7 +48,7 @@ class Database():
     def insert_card(self, card: Card):
         self.cursor.execute(f"""
             INSERT INTO {CARD_TABLE_NAME} VALUES
-                ('{card.name}', '{card.image_link}', '{card.oracle_text}', '{card.set_name}')
+                ("{card.name}", "{card.image_link}", "{card.oracle_text}", "{card.set_name}")
         """)
 
         self.current_id = self.cursor.execute("SELECT last_insert_rowid()").fetchone()[0]

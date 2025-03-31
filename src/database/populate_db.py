@@ -11,8 +11,11 @@ def populate_db():
     db = Database()
     for set in sets:
         db.insert_set(set)
+        
         # Then I want to go thru all of the sets, get the top card, and add it to the db
         newest_cards = scrap_for_cards(set, get_only_latest=True)
+
+        db.insert_many_cards(newest_cards)
 
 if __name__=="__main__":
     populate_db()
