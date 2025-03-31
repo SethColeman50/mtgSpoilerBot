@@ -11,12 +11,18 @@ header = {
     "contact": "sethcoleman2003@gmail.com"
 }
 
-def scrap_for_cards(latest_card: Card, set_name: str, get_only_latest=False):
-    # contents = requests.get('https://www.magicspoiler.com/mtg-set/tarkir-dragonstorm/', headers=header).text
-    contents = open('src/webScrap/testing_html/testingContent.html', 'r').read()
+PLACEHOLDER_CARD = Card("placeholder", "placeholder", "placeholder", "placeholder")
+
+def scrap_for_cards(set: Set, latest_card=PLACEHOLDER_CARD, get_only_latest=False) -> list[Card]:
+    # contents = requests.get(set.link, headers=header).text
+    contents = open(f'src/webScrap/testing_html/{set.link.split('/')[-2]}.html', 'r').read()
     soup = BeautifulSoup(contents, 'html.parser')
 
-    cards = soup.find_all("article")
+    if get_only_latest:
+        cards = soup.find_all("article")[:1]
+    else:
+        cards = soup.find_all("article")
+
     output = []
     for card in cards:
         # time.sleep(1)
@@ -27,21 +33,22 @@ def scrap_for_cards(latest_card: Card, set_name: str, get_only_latest=False):
 
         image_link = card.find("a").find("img").get("src")
 
-        link = card.find("a").get('href')
+        # link = card.find("a").get('href')
         # card_page = requests.get(link, headers=header).text
         card_page = open("src/webScrap/testing_html/cardPageWithDescription.html", "r").read()
         card_page = BeautifulSoup(card_page, 'html.parser')
-        oracle_text = card_page.find("div", attrs={"class": "c-content"}).text
+        oracle_text = card_page.find("div", attrs={"class": "c-content"}).text.strip()
 
         output.append(Card(
             name=name,
             image_link=image_link,
-            oracle_text=oracle_text
+            oracle_text=oracle_text,
+            set_name=set.name
         ))
     
     return output
 
-def scrap_for_sets():
+def scrap_for_sets() -> list[Set]: 
     # contents = requests.get("https://www.magicspoiler.com/mtg-spoilers/").text
     contents = open("src/webScrap/testing_html/setListPage.html", 'r').read()
     soup = BeautifulSoup(contents, "html.parser")
@@ -62,4 +69,6 @@ def scrap_for_sets():
         link = set["href"]
 
         output.append(Set(name, link, date))
+
+    return output
 

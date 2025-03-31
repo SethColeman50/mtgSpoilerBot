@@ -31,7 +31,8 @@ class Database():
         self.cursor.execute(f"""CREATE TABLE IF NOT EXISTS {SETS_TABLE_NAME} (
             name        TEXT,
             link            TEXT,
-            release_date    TEXT
+            release_date    TEXT,
+            PRIMARY KEY (name)
         )""")
 
         self.cursor.execute(f'''
@@ -47,7 +48,7 @@ class Database():
     def insert_card(self, card: Card):
         self.cursor.execute(f"""
             INSERT INTO {CARD_TABLE_NAME} VALUES
-                ('{card.name}', '{card.image_link}', '{card.oracle_text}')
+                ('{card.name}', '{card.image_link}', '{card.oracle_text}', '{card.set_name}')
         """)
 
         self.current_id = self.cursor.execute("SELECT last_insert_rowid()").fetchone()[0]
@@ -82,12 +83,8 @@ class Database():
         return [guild_and_channel[0] for guild_and_channel in guilds_and_channels]
     
     def insert_set(self, set: Set):
-        print(f'''
-            INSERT INTO {SETS_TABLE_NAME} VALUES
-                ('{set.name}', '{set.link}', '{set.release_date}')
-        ''')
         self.cursor.execute(f'''
-            INSERT INTO {SETS_TABLE_NAME} VALUES
+            REPLACE INTO {SETS_TABLE_NAME} VALUES
                 ("{set.name}", '{set.link}', '{set.release_date}')
         ''')
         
