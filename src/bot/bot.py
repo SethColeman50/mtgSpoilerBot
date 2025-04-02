@@ -59,11 +59,16 @@ def start_bot():
 
 def get_new_cards():
     db = Database()
-    new_cards = scrap_for_cards(latest_card=db.get_latest_card())
-    db.insert_many_cards(new_cards)
-    return new_cards
+    sets = db.get_all_sets()
+    
+    new_cards = []
+    for set in sets:
+        for card in scrap_for_cards(set, latest_card=db.get_latest_card(set)):
+            new_cards.append(card)
 
-        
+    db.insert_many_cards(new_cards)
+    
+    return new_cards
 
 
 if __name__=="__main__":

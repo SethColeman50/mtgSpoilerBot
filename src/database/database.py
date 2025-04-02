@@ -17,13 +17,12 @@ class Database():
         self.connection = sqlite3.connect("previous_cards.db")
         self.cursor = self.connection.cursor()
         self.create_tables()
-        self.current_id = self.cursor.execute(f"SELECT MAX(rowid) FROM {CARD_TABLE_NAME}").fetchone()[0]
 
     def create_tables(self):
         self.cursor.execute(f'''
             CREATE TABLE IF NOT EXISTS {CHANNEL_TABLE_NAME} (
-                guild_id    NUMBER,
-                channel_id  NUMBER,
+                guild_id    INTEGER,
+                channel_id  INTEGER,
                 PRIMARY KEY (guild_id)
             )
         ''')
@@ -32,6 +31,7 @@ class Database():
             name        TEXT,
             link            TEXT,
             release_date    TEXT,
+            latest_card_id  INTEGER,
             PRIMARY KEY (name)
         )""")
 
@@ -41,17 +41,24 @@ class Database():
                 image_link  TEXT, 
                 oracle_text TEXT,
                 set_name    TEXT,
-                FOREIGN KEY(set_name) REFERENCES {SETS_TABLE_NAME}(name)
+                FOREIGN KEY(set_name) REFERENCES {SETS_TABLE_NAME}(name),
+                PRIMARY KEY (name)
             )
         ''')
 
     def insert_card(self, card: Card):
         self.cursor.execute(f"""
-            INSERT INTO {CARD_TABLE_NAME} VALUES
+            REPLACE INTO {CARD_TABLE_NAME} VALUES
                 ("{card.name}", "{card.image_link}", "{card.oracle_text}", "{card.set_name}")
         """)
 
-        self.current_id = self.cursor.execute("SELECT last_insert_rowid()").fetchone()[0]
+        row_id = self.cursor.execute("SELECT last_insert_rowid()").fetchone()[0]
+
+        self.cursor.execute(f'''
+            UPDATE {SETS_TABLE_NAME}
+            SET "latest_card_id" = ?
+            WHERE "name" = ?         
+        ''', (row_id, card.set_name))
 
         self.connection.commit()
 
@@ -60,13 +67,18 @@ class Database():
         for card in cards:
             self.insert_card(card)
 
-    def get_latest_card(self):
-        if self.current_id == None:
+    def get_latest_card(self, set: Set):
+        rowid = self.cursor.execute(f'''
+            SELECT latest_card_id FROM {SETS_TABLE_NAME}
+            WHERE name=?                           
+        ''', (set.name, )).fetchone()[0]
+
+        if rowid == -1:
             return None
         
         return Card(*self.cursor.execute(f"""
-            SELECT * FROM {CARD_TABLE_NAME} WHERE rowid={self.current_id}
-        """).fetchone())
+            SELECT * FROM {CARD_TABLE_NAME} WHERE rowid=?
+        """, (rowid, )).fetchone())
     
     def insert_channel(self, guild_id: int, channel_id: int):
         self.cursor.execute(f'''
@@ -85,7 +97,14 @@ class Database():
     def insert_set(self, set: Set):
         self.cursor.execute(f'''
             REPLACE INTO {SETS_TABLE_NAME} VALUES
-                ("{set.name}", '{set.link}', '{set.release_date}')
+                ("{set.name}", '{set.link}', '{set.release_date}', -1)
         ''')
         
         self.connection.commit()
+
+    def get_all_sets(self):
+        query_result = self.cursor.execute(f'SELECT * FROM {SETS_TABLE_NAME}').fetchall()
+        
+        return [Set(name, link, release_date) for name, link, release_date, _ in query_result]
+        
+        
