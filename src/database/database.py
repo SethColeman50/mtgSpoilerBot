@@ -106,5 +106,8 @@ class Database():
         query_result = self.cursor.execute(f'SELECT * FROM {SETS_TABLE_NAME}').fetchall()
         
         return [Set(name, link, release_date) for name, link, release_date, _ in query_result]
+    
+    def is_empty(self) -> bool:
+        query_result = self.cursor.execute(f'SELECT * FROM {SETS_TABLE_NAME}').fetchall()
         
-        
+        return query_result == []  

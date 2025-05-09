@@ -6,8 +6,11 @@ from webScrap.scrapping import scrap_for_cards
 from webScrap.card import Card
 from discord.ext import tasks
 import traceback
+from database.populate_db import populate_db
 
 MY_USER_ID = 453325432658460685
+
+load_dotenv("../../.env")
 
 def start_bot():
     intents = discord.Intents.default()
@@ -19,6 +22,10 @@ def start_bot():
     @client.event
     async def on_ready():
         print(f'We have logged in as {client.user}')
+        if os.getenv("TESTING") is not None:
+            print("Running in dev mode", flush=True)
+
+        populate_db()
         send_new_cards.start()
 
     @tasks.loop(minutes=20)
@@ -27,7 +34,7 @@ def start_bot():
         try:
             new_cards = get_new_cards()
             if new_cards == []:
-                print("No new cards to post")
+                print("No new cards to post", flush=True)
         except Exception:
             await client.get_user(MY_USER_ID).send(f"An exception happened :(\n```\n{traceback.format_exc()}\n```")
             print(traceback.format_exc(), flush=True)
