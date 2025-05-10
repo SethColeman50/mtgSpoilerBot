@@ -1,9 +1,11 @@
 import sqlite3
 from webScrap.card import Card
+from webScrap.set import Set
 
 # I want a database singleton that combines all the things I've created so far to reduce repeated code
 CARD_TABLE_NAME = "cards"
 CHANNEL_TABLE_NAME = "channels"
+SETS_TABLE_NAME = "sets"
 
 class Database():
     def __new__(cls):
@@ -15,20 +17,49 @@ class Database():
         self.connection = sqlite3.connect("previous_cards.db")
         self.cursor = self.connection.cursor()
         self.create_tables()
-        self.current_id = self.cursor.execute(f"SELECT MAX(rowid) FROM {CARD_TABLE_NAME}").fetchone()[0]
 
     def create_tables(self):
-        self.cursor.execute(f"CREATE TABLE IF NOT EXISTS {CARD_TABLE_NAME} (name, image_link, oracle_text)")
+        self.cursor.execute(f'''
+            CREATE TABLE IF NOT EXISTS {CHANNEL_TABLE_NAME} (
+                guild_id    INTEGER,
+                channel_id  INTEGER,
+                PRIMARY KEY (guild_id)
+            )
+        ''')
 
-        self.cursor.execute(f"CREATE TABLE IF NOT EXISTS {CHANNEL_TABLE_NAME} (guild_id, channel_id, PRIMARY KEY (guild_id))")
+        self.cursor.execute(f"""CREATE TABLE IF NOT EXISTS {SETS_TABLE_NAME} (
+            name        TEXT,
+            link            TEXT,
+            release_date    TEXT,
+            latest_card_id  INTEGER,
+            PRIMARY KEY (name)
+        )""")
+
+        self.cursor.execute(f'''
+            CREATE TABLE IF NOT EXISTS {CARD_TABLE_NAME} (
+                name        TEXT, 
+                image_link  TEXT, 
+                oracle_text TEXT,
+                set_name    TEXT,
+                FOREIGN KEY(set_name) REFERENCES {SETS_TABLE_NAME}(name),
+                PRIMARY KEY (name)
+            )
+        ''')
 
     def insert_card(self, card: Card):
         self.cursor.execute(f"""
-            INSERT INTO {CARD_TABLE_NAME} VALUES
-                ('{card.name}', '{card.image_link}', '{card.oracle_text}')
+            INSERT OR IGNORE INTO {CARD_TABLE_NAME} VALUES
+                ("{card.name}", "{card.image_link}", "{card.oracle_text}", "{card.set_name}")
         """)
 
-        self.current_id = self.cursor.execute("SELECT last_insert_rowid()").fetchone()[0]
+        row_id = self.cursor.execute("SELECT last_insert_rowid()").fetchone()[0]
+
+        if row_id != 0:
+            self.cursor.execute(f'''
+                UPDATE {SETS_TABLE_NAME}
+                SET "latest_card_id" = ?
+                WHERE "name" = ?         
+            ''', (row_id, card.set_name))
 
         self.connection.commit()
 
@@ -37,13 +68,18 @@ class Database():
         for card in cards:
             self.insert_card(card)
 
-    def get_latest_card(self):
-        if self.current_id == None:
+    def get_latest_card(self, set: Set):
+        rowid = self.cursor.execute(f'''
+            SELECT latest_card_id FROM {SETS_TABLE_NAME}
+            WHERE name=?                           
+        ''', (set.name, )).fetchone()[0]
+
+        if rowid == -1:
             return None
         
         return Card(*self.cursor.execute(f"""
-            SELECT * FROM {CARD_TABLE_NAME} WHERE rowid={self.current_id}
-        """).fetchone())
+            SELECT * FROM {CARD_TABLE_NAME} WHERE rowid=?
+        """, (rowid, )).fetchone())
     
     def insert_channel(self, guild_id: int, channel_id: int):
         self.cursor.execute(f'''
@@ -58,3 +94,17 @@ class Database():
             SELECT channel_id FROM {CHANNEL_TABLE_NAME}
         ''').fetchall()
         return [guild_and_channel[0] for guild_and_channel in guilds_and_channels]
+    
+    def insert_set(self, set: Set):
+        self.cursor.execute(f'''
+            INSERT OR IGNORE INTO {SETS_TABLE_NAME} VALUES
+                ("{set.name}", '{set.link}', '{set.release_date}', -1)
+        ''')
+        
+        self.connection.commit()
+
+    def get_all_sets(self):
+        query_result = self.cursor.execute(f'SELECT * FROM {SETS_TABLE_NAME}').fetchall()
+        
+        return [Set(name, link, release_date) for name, link, release_date, _ in query_result]
+    

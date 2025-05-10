@@ -1,4 +1,4 @@
-FROM python:3.13.2-alpine3.21
+FROM python:3.13.3-alpine
 WORKDIR /code
 RUN python -m venv .venv
 RUN source ./.venv/bin/activate
