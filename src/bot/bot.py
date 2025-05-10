@@ -2,7 +2,7 @@ import discord
 from dotenv import load_dotenv
 import os
 from database.database import Database
-from webScrap.scrapping import scrap_for_cards
+from webScrap.scrapping import scrap_for_cards, scrap_for_sets
 from webScrap.card import Card
 from discord.ext import tasks
 import traceback
@@ -66,7 +66,7 @@ def start_bot():
 
 def get_new_cards():
     db = Database()
-    sets = db.get_all_sets()
+    sets = scrap_for_sets()
     
     new_cards = []
     for set in sets:
