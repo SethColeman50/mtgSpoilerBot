@@ -48,17 +48,18 @@ class Database():
 
     def insert_card(self, card: Card):
         self.cursor.execute(f"""
-            REPLACE INTO {CARD_TABLE_NAME} VALUES
+            INSERT OR IGNORE INTO {CARD_TABLE_NAME} VALUES
                 ("{card.name}", "{card.image_link}", "{card.oracle_text}", "{card.set_name}")
         """)
 
         row_id = self.cursor.execute("SELECT last_insert_rowid()").fetchone()[0]
 
-        self.cursor.execute(f'''
-            UPDATE {SETS_TABLE_NAME}
-            SET "latest_card_id" = ?
-            WHERE "name" = ?         
-        ''', (row_id, card.set_name))
+        if row_id != 0:
+            self.cursor.execute(f'''
+                UPDATE {SETS_TABLE_NAME}
+                SET "latest_card_id" = ?
+                WHERE "name" = ?         
+            ''', (row_id, card.set_name))
 
         self.connection.commit()
 
@@ -96,7 +97,7 @@ class Database():
     
     def insert_set(self, set: Set):
         self.cursor.execute(f'''
-            REPLACE INTO {SETS_TABLE_NAME} VALUES
+            INSERT OR IGNORE INTO {SETS_TABLE_NAME} VALUES
                 ("{set.name}", '{set.link}', '{set.release_date}', -1)
         ''')
         
@@ -107,7 +108,3 @@ class Database():
         
         return [Set(name, link, release_date) for name, link, release_date, _ in query_result]
     
-    def is_empty(self) -> bool:
-        query_result = self.cursor.execute(f'SELECT * FROM {SETS_TABLE_NAME}').fetchall()
-        
-        return query_result == []  

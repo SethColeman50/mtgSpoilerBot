@@ -9,9 +9,6 @@ load_dotenv()
 
 def populate_db():
     db = Database()
-    if not db.is_empty():
-        print("Database is already populated")
-        return
     
     # I want this to go out, get the list page, add them all to a set table
     sets = scrap_for_sets()
