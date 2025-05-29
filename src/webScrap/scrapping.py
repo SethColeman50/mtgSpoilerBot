@@ -15,10 +15,11 @@ header = {
 
 PLACEHOLDER_CARD = Card("placeholder", "placeholder", "placeholder", "placeholder")
 
-load_dotenv("../../.env")
-is_testing =  os.getenv("TESTING") is not None
 
 def scrap_for_cards(set: Set, latest_card=PLACEHOLDER_CARD, get_only_latest=False) -> list[Card]:
+    load_dotenv("../../.env")
+    is_testing =  os.getenv("TESTING") is not None
+
     if is_testing:
         contents = open(f'src/webScrap/testing_html/{set.link.split('/')[-2]}.html', 'r').read()
     else:
@@ -61,6 +62,9 @@ def scrap_for_cards(set: Set, latest_card=PLACEHOLDER_CARD, get_only_latest=Fals
     return output
 
 def scrap_for_sets() -> list[Set]: 
+    load_dotenv("../../.env")
+    is_testing =  os.getenv("TESTING") is not None
+    
     if is_testing:
         contents = open("src/webScrap/testing_html/setListPage.html", 'r').read()
     else:
