@@ -72,6 +72,10 @@ def start_bot():
         if message.author == client.user or client.user not in message.mentions or message.author.id != MY_USER_ID:
             return
         
+        if "shutdown" in message.content.lower():
+            logger.warning("Bot shutdown by command")
+            exit()
+        
         guild_id = message.guild.id
         channel_id = message.channel_mentions[0].id
         db.insert_channel(guild_id, channel_id)

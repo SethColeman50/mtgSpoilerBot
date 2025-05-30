@@ -43,3 +43,8 @@ and can be brought down with:
 ```bash
 docker compose down
 ```
+
+## Server Setup
+- `@<NAME OF BOT> #<CHANNEL NAME>` sets the channel the bot will post to
+- `@<NAME OF BOT> shutdown` will shutdown the bot
+- These commands can only be run by the user specified at the top of `bot.py`
