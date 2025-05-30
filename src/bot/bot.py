@@ -7,13 +7,11 @@ from webScrap.card import Card
 from discord.ext import tasks
 import traceback
 from database.populate_db import populate_db
-import logging
-import sys
 from src.__main__ import get_logger
 
 MY_USER_ID = 453325432658460685
 
-load_dotenv("../../.env")
+load_dotenv()
 db = Database()
 
 logger = get_logger(__name__, "bot.log")

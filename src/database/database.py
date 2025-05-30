@@ -1,11 +1,14 @@
 import sqlite3
 from webScrap.card import Card
 from webScrap.set import Set
+from src.__main__ import get_logger
 
 # I want a database singleton that combines all the things I've created so far to reduce repeated code
 CARD_TABLE_NAME = "cards"
 CHANNEL_TABLE_NAME = "channels"
 SETS_TABLE_NAME = "sets"
+
+logger = get_logger(__name__, "db.log")
 
 class Database():
     def __new__(cls):
@@ -46,6 +49,8 @@ class Database():
             )
         ''')
 
+        logger.info("created tables")
+
     def insert_card(self, card: Card):
         self.cursor.execute(f"""
             INSERT OR IGNORE INTO {CARD_TABLE_NAME} VALUES
@@ -60,6 +65,9 @@ class Database():
                 SET "latest_card_id" = ?
                 WHERE "name" = ?         
             ''', (row_id, card.set_name))
+            logger.info(f"Inserted this card: {card}")
+        else:
+            logger.warning(f"Failed to insert duplicate card: {card}")
 
         self.connection.commit()
 
@@ -88,6 +96,7 @@ class Database():
         ''')
 
         self.connection.commit()
+        logger.info(f"Inserted channel {channel_id} in guild {guild_id} into database")
     
     def get_all_channels(self):
         guilds_and_channels = self.cursor.execute(f'''
@@ -102,6 +111,7 @@ class Database():
         ''')
         
         self.connection.commit()
+        logger.info(f"Inserted this set into the database: {set}")
 
     def get_all_sets(self):
         query_result = self.cursor.execute(f'SELECT * FROM {SETS_TABLE_NAME}').fetchall()
