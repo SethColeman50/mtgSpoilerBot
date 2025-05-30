@@ -3,9 +3,10 @@ from webScrap.scrapping import scrap_for_cards, scrap_for_sets
 from database.database import Database
 from dotenv import load_dotenv
 import os
+from src.__main__ import get_logger
 
-load_dotenv()
-
+load_dotenv("../../.env")
+logger = get_logger(__name__, "db.log")
 
 def populate_db():
     db = Database()
@@ -24,7 +25,7 @@ def populate_db():
         if newest_card != []:
             db.insert_card(newest_card[0])
 
-    print("Populated database", flush=True)
+    logger.info("Populated database")
 
 if __name__=="__main__":
     populate_db()

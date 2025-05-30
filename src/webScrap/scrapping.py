@@ -7,6 +7,7 @@ from datetime import datetime
 from webScrap.set import Set
 import os
 from dotenv import load_dotenv
+from src.__main__ import get_logger
 
 header = {
     "User-Agent": "MTG Spoiler Discord Bot for private use",
@@ -15,10 +16,12 @@ header = {
 
 PLACEHOLDER_CARD = Card("placeholder", "placeholder", "placeholder", "placeholder")
 
-load_dotenv("../../.env")
-is_testing =  os.getenv("TESTING") is not None
+logger = get_logger(__name__, "scrapping.log")
 
 def scrap_for_cards(set: Set, latest_card=PLACEHOLDER_CARD, get_only_latest=False) -> list[Card]:
+    load_dotenv("../../.env")
+    is_testing = os.getenv("TESTING") is not None
+
     if is_testing:
         contents = open(f'src/webScrap/testing_html/{set.link.split('/')[-2]}.html', 'r').read()
     else:
@@ -51,16 +54,23 @@ def scrap_for_cards(set: Set, latest_card=PLACEHOLDER_CARD, get_only_latest=Fals
         card_page = BeautifulSoup(card_page, 'html.parser')
         oracle_text = card_page.find("div", attrs={"class": "c-content"}).text.strip()
 
-        output.append(Card(
+        card = Card(
             name=name,
             image_link=image_link,
             oracle_text=oracle_text,
             set_name=set.name
-        ))
+        )
+        
+        output.append(card)
+
+        logger.info(f"Scrapped this card: {card}")
     
     return output
 
 def scrap_for_sets() -> list[Set]: 
+    load_dotenv("../../.env")
+    is_testing =  os.getenv("TESTING") is not None
+    
     if is_testing:
         contents = open("src/webScrap/testing_html/setListPage.html", 'r').read()
     else:
@@ -83,7 +93,9 @@ def scrap_for_sets() -> list[Set]:
         name = set.find("div", attrs={"class": 'upcoming-set'}).find('div').text
         link = set["href"]
 
-        output.append(Set(name, link, date))
+        set = Set(name, link, date)
+        output.append(set)
+        logger.info(f"Scrapped this set: {set}")
 
     return output
 
