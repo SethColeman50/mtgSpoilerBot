@@ -1,6 +1,6 @@
 # mtgSpoilerBot
 
-A discord bot to post new spoiler cards for Magic: the Gathering by scrapping https://www.magicspoiler.com/. Currently only avaliable to self host and uses
+A discord bot to post new spoiler cards for Magic: the Gathering by scrapping https://www.magicspoiler.com/. Currently only avaliable to self host.
 
 ## Developer setup
 ### Prerequites
@@ -19,6 +19,13 @@ cd mtgSpoilerBot
 
 ### Creating a discord bot
 A tutorial is linked [here](https://discordpy.readthedocs.io/en/stable/discord.html).
+
+#### Bot Premissions
+Needed premissions:
+- View Channels (for setting the spoiler channel)
+- Send Messages
+- Embed Links 
+- Attach Files (for sending the images)
 
 ### Creating the local files
 Create a file named `.env` in the root directory with these contents:
