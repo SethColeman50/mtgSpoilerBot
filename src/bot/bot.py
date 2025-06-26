@@ -52,6 +52,11 @@ def start_bot():
             message = card.oracle_text if '\n' in card.oracle_text or "SRC" not in card.oracle_text else ""
             image = discord.Embed(type="image", description=card.name).set_image(url=card.image_link)
 
+            images = [image]
+            for link in card.extra_image_links:
+                image = discord.Embed(type="image", description="").set_image(url=link)
+                images.append(image)
+
             if not message and not image:
                 logger.info(f"Skipping card {card.name} because message and embed are empty")
 
@@ -62,10 +67,10 @@ def start_bot():
                     logger.warning(f"Channel {channel_id} not found.")
                 else:
                     try:
-                        await channel.send(message, embed=image, silent=True)
+                        await channel.send(message, embeds=images, silent=True)
                         logger.info(f"Sent message for {card.name} to channel {channel_id}")
-                    except Exception as e:
-                        logger.error(f"Failed to send {card.name} to {channel_id}: {e}")
+                    except Exception:
+                        logger.error(f"Failed to send {card.name} to {channel_id}: {traceback.format_exc()}")
 
     @client.event
     async def on_message(message):

@@ -52,13 +52,23 @@ def scrap_for_cards(set: Set, latest_card=PLACEHOLDER_CARD, get_only_latest=Fals
             card_page = requests.get(link, headers=header).text
             
         card_page = BeautifulSoup(card_page, 'html.parser')
-        oracle_text = card_page.find("div", attrs={"class": "c-content"}).text.strip()
+        extra_content_div = card_page.find("div", attrs={"class": "c-content"})
+        
+        extra_image_links = []
+        oracle_text = ""
+        for p in extra_content_div.find_all("p"):
+            image = p.find("img")
+            if image is not None:
+                extra_image_links.append(image.get("src"))
+            else:
+                oracle_text = extra_content_div.text.strip()
 
         card = Card(
             name=name,
             image_link=image_link,
             oracle_text=oracle_text,
-            set_name=set.name
+            set_name=set.name,
+            extra_image_links=extra_image_links
         )
         
         output.append(card)
