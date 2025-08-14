@@ -10,15 +10,14 @@ from dotenv import load_dotenv
 from src.__main__ import get_logger
 
 header = {
-    "User-Agent": "MTG Spoiler Discord Bot for private use",
-    "contact": "sethcoleman2003@gmail.com"
+    "User-Agent": "MTG Spoiler Discord Bot for private use/ contact: sethcoleman2003@gmail.com",
 }
 
 PLACEHOLDER_CARD = Card("placeholder", "placeholder", "placeholder", "placeholder")
 
 logger = get_logger(__name__, "scrapping.log")
 
-def scrap_for_cards(set: Set, current_cards=[]) -> list[Card]:
+def scrap_for_cards(set: Set, current_cards=[], populating=False) -> list[Card]:
     load_dotenv("../../.env")
     is_testing = os.getenv("TESTING") is not None
 
@@ -33,12 +32,17 @@ def scrap_for_cards(set: Set, current_cards=[]) -> list[Card]:
 
     output = []
     for card in cards:
-        if not is_testing:
-            time.sleep(1)
 
         name = card.find("h4").find("a").text
         if name in [card.name for card in current_cards]:
             continue
+
+        if populating:
+            output.append(Card(name, set.name))
+            continue
+
+        if not is_testing:
+            time.sleep(1)
 
         image_link = card.find("a").find("img").get("src")
 

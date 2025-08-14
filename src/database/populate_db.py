@@ -20,12 +20,12 @@ def populate_db():
     sets = scrap_for_sets()
     for set in sets:
         db.insert_set(set)
+        current_cards = db.get_all_cards_in_set(set)
         
         # Then I want to go thru all of the sets, get the top card, and add it to the db
+        cards = scrap_for_cards(set, current_cards=current_cards, populating=True)
         if os.getenv("TESTING") is not None:
-            cards = scrap_for_cards(set)[2:]
-        else:
-            cards = scrap_for_cards(set)
+            cards[2:]
         
         if cards != []:
             db.insert_many_cards(cards)
