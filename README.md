@@ -28,11 +28,7 @@ Needed premissions:
 - Attach Files (for sending the images)
 
 ### Creating the local files
-Create a file named `.env` in the root directory with these contents:
-```
-TOKEN=<bot token from discord>
-```
-(Any text enclosed in angle brackets (`<>`) is to be fully replaced)
+Create a file named `.env` in the root directory that's a copy of `.env.template`. Any text enclosed in angle brackets (`<>`) is to be fully replaced
 
 ### Building
 This project is built with Docker Compose:
@@ -45,6 +41,7 @@ docker compose down
 ```
 
 ## Server Setup
+You can send these message to the bot as long as your user_id is in `.env`.
+
 - `@<NAME OF BOT> #<CHANNEL NAME>` sets the channel the bot will post to
 - `@<NAME OF BOT> shutdown` will shutdown the bot
-- These commands can only be run by the user specified at the top of `bot.py`

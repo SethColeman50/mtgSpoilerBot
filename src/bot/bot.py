@@ -9,12 +9,15 @@ import traceback
 from database.populate_db import populate_db
 from src.__main__ import get_logger
 
-MY_USER_ID = 453325432658460685
+logger = get_logger(__name__, "bot.log")
 
 load_dotenv()
-db = Database()
+MY_USER_ID = os.getenv("ADMIN_USER_ID")
+if MY_USER_ID == None or not MY_USER_ID.isdigit():
+    logger.error("Discord user id missing or incorrect in .env")
+    exit()
 
-logger = get_logger(__name__, "bot.log")
+db = Database()
 
 def start_bot():
     intents = discord.Intents.default()
