@@ -18,7 +18,7 @@ PLACEHOLDER_CARD = Card("placeholder", "placeholder", "placeholder", "placeholde
 
 logger = get_logger(__name__, "scrapping.log")
 
-def scrap_for_cards(set: Set, latest_card=PLACEHOLDER_CARD, get_only_latest=False) -> list[Card]:
+def scrap_for_cards(set: Set, current_cards=[]) -> list[Card]:
     load_dotenv("../../.env")
     is_testing = os.getenv("TESTING") is not None
 
@@ -29,10 +29,7 @@ def scrap_for_cards(set: Set, latest_card=PLACEHOLDER_CARD, get_only_latest=Fals
     
     soup = BeautifulSoup(contents, 'html.parser')
 
-    if get_only_latest:
-        cards = soup.find_all("article")[:1]
-    else:
-        cards = soup.find_all("article")
+    cards = soup.find_all("article")
 
     output = []
     for card in cards:
@@ -40,8 +37,8 @@ def scrap_for_cards(set: Set, latest_card=PLACEHOLDER_CARD, get_only_latest=Fals
             time.sleep(1)
 
         name = card.find("h4").find("a").text
-        if latest_card != None and name == latest_card.name:
-            return output
+        if name in [card.name for card in current_cards]:
+            continue
 
         image_link = card.find("a").find("img").get("src")
 

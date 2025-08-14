@@ -95,7 +95,8 @@ def get_new_cards():
     
     new_cards = []
     for set in sets:
-        for card in scrap_for_cards(set, latest_card=db.get_latest_card(set)):
+        current_cards = db.get_all_cards_in_set(set)
+        for card in scrap_for_cards(set, current_cards):
             new_cards.append(card)
 
     db.insert_many_cards(new_cards)

@@ -19,75 +19,30 @@ class Database():
     def __init__(self):
         self.connection = sqlite3.connect("previous_cards.db")
         self.cursor = self.connection.cursor()
-        self.create_tables()
-
-    def create_tables(self):
-        self.cursor.execute(f'''
-            CREATE TABLE IF NOT EXISTS {CHANNEL_TABLE_NAME} (
-                guild_id    INTEGER,
-                channel_id  INTEGER,
-                PRIMARY KEY (guild_id)
-            )
-        ''')
-
-        self.cursor.execute(f"""CREATE TABLE IF NOT EXISTS {SETS_TABLE_NAME} (
-            name        TEXT,
-            link            TEXT,
-            release_date    TEXT,
-            latest_card_id  INTEGER,
-            PRIMARY KEY (name)
-        )""")
-
-        self.cursor.execute(f'''
-            CREATE TABLE IF NOT EXISTS {CARD_TABLE_NAME} (
-                name        TEXT, 
-                image_link  TEXT, 
-                oracle_text TEXT,
-                set_name    TEXT,
-                FOREIGN KEY(set_name) REFERENCES {SETS_TABLE_NAME}(name),
-                PRIMARY KEY (name)
-            )
-        ''')
-
-        logger.info("created tables")
 
     def insert_card(self, card: Card):
-        self.cursor.execute(f"""
-            INSERT OR IGNORE INTO {CARD_TABLE_NAME} VALUES
-                ("{card.name}", "{card.image_link}", "{card.oracle_text}", "{card.set_name}")
-        """)
+        try:
+            self.cursor.execute(f"""
+                INSERT OR FAIL INTO {CARD_TABLE_NAME} VALUES
+                    ("{card.name}", "{card.set_name}")
+            """)
+            self.connection.commit()
 
-        row_id = self.cursor.execute("SELECT last_insert_rowid()").fetchone()[0]
-
-        if row_id != 0:
-            self.cursor.execute(f'''
-                UPDATE {SETS_TABLE_NAME}
-                SET "latest_card_id" = ?
-                WHERE "name" = ?         
-            ''', (row_id, card.set_name))
             logger.info(f"Inserted this card: {card}")
-        else:
+        except:
             logger.warning(f"Failed to insert duplicate card: {card}")
 
-        self.connection.commit()
-
     def insert_many_cards(self, cards: list[Card]):
-        cards.reverse() # This is because the cards are given to this function as newest to oldest, and I want the newest to be the last card added to the db for latest card to work
         for card in cards:
             self.insert_card(card)
 
-    def get_latest_card(self, set: Set):
-        rowid = self.cursor.execute(f'''
-            SELECT latest_card_id FROM {SETS_TABLE_NAME}
-            WHERE name=?                           
-        ''', (set.name, )).fetchone()[0]
+    def get_all_cards_in_set(self, set: Set):
+        card_names = self.cursor.execute(f'''
+            SELECT name FROM {CARD_TABLE_NAME}
+            WHERE set_name="{set.name}"              
+        ''').fetchall()
 
-        if rowid == -1:
-            return None
-        
-        return Card(*self.cursor.execute(f"""
-            SELECT * FROM {CARD_TABLE_NAME} WHERE rowid=?
-        """, (rowid, )).fetchone())
+        return [Card(name[0], set.name) for name in card_names]
     
     def insert_channel(self, guild_id: int, channel_id: int):
         self.cursor.execute(f'''
@@ -107,14 +62,11 @@ class Database():
     def insert_set(self, set: Set):
         self.cursor.execute(f'''
             INSERT OR IGNORE INTO {SETS_TABLE_NAME} VALUES
-                ("{set.name}", '{set.link}', '{set.release_date}', -1)
+                ("{set.name}", '{set.link}')
         ''')
         
         self.connection.commit()
         logger.info(f"Inserted this set into the database: {set}")
 
-    def get_all_sets(self):
-        query_result = self.cursor.execute(f'SELECT * FROM {SETS_TABLE_NAME}').fetchall()
-        
-        return [Set(name, link, release_date) for name, link, release_date, _ in query_result]
+    
     

@@ -23,12 +23,12 @@ def populate_db():
         
         # Then I want to go thru all of the sets, get the top card, and add it to the db
         if os.getenv("TESTING") is not None:
-            newest_card = scrap_for_cards(set)[1:2]
+            cards = scrap_for_cards(set)[2:]
         else:
-            newest_card = scrap_for_cards(set, get_only_latest=True)
-
-        if newest_card != []:
-            db.insert_card(newest_card[0])
+            cards = scrap_for_cards(set)
+        
+        if cards != []:
+            db.insert_many_cards(cards)
 
     logger.info("Populated database")
 

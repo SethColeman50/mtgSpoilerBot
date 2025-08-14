@@ -1,5 +1,5 @@
 class Card:
-    def __init__(self, name: str, image_link: str, oracle_text: str, set_name: str, extra_image_links=[]):
+    def __init__(self, name: str, set_name: str, image_link="", oracle_text="", extra_image_links=[]):
         self.name = name
         self.image_link = image_link
         self.oracle_text = oracle_text
