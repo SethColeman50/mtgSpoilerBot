@@ -10,6 +10,11 @@ logger = get_logger(__name__, "db.log")
 
 def populate_db():
     db = Database()
+
+    if os.getenv("TESTING") is not None:
+        db.cursor.execute('''
+            DELETE FROM cards;     
+        ''')
     
     # I want this to go out, get the list page, add them all to a set table
     sets = scrap_for_sets()
