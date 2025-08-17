@@ -2,4 +2,4 @@ services:
   bot:
     build: .
     volumes:
-      - .:/code
+      - ./previous_cards.db:/app/previous_cards.db
