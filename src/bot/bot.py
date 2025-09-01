@@ -16,6 +16,8 @@ MY_USER_ID = os.getenv("ADMIN_USER_ID")
 if MY_USER_ID == None or not MY_USER_ID.isdigit():
     logger.error("Discord user id missing or incorrect in .env")
     exit()
+else:
+    MY_USER_ID = int(MY_USER_ID)
 
 db = Database()
 
